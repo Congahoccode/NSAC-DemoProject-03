@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Weather Risk Assessment — Leaflet + GeoRaster</title>
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+  </head>
+  <body>
+    <header class="topbar" role="banner">
+      <div class="brand">
+        <div class="logo">WR</div>
+        <div>
+          <h1>Weather Risk Assessment</h1>
+          <p>Rainbow Cloud</p>
+        </div>
+      </div>
+
+      <div class="search-area">
+        <form class="search-form" role="search" aria-label="Search location">
+          <div class="input-wrap">
+            <svg
+              class="search-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M11 19a8 8 0 1 1 5.293-14.293A8 8 0 0 1 11 19z"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M21 21l-4.35-4.35"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+
+            <input
+              id="locationInput"
+              class="search-input"
+              type="search"
+              name="location"
+              placeholder="Enter your location"
+              aria-label="Enter your location"
+              autocomplete="off"
+            />
+            <!-- suggestionBox inserted dynamically -->
+          </div>
+
+          <button
+            type="button"
+            class="map-btn"
+            id="openMapBtn"
+            aria-label="Open map"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 2C8.686 2 6 4.686 6 8c0 4.667 6 12 6 12s6-7.333 6-12c0-3.314-2.686-6-6-6z"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle
+                cx="12"
+                cy="8"
+                r="2.2"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </form>
+      </div>
+    </header>
+
+    <main id="main">
+      <div id="info" class="weather-sunny">
+        <div
+          style="
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            padding-left: 20px;
+          "
+        >
+          <h2 id="location_name"></h2>
+          <div id="elevation">Elevation:</div>
+          <div id="climate_type">Climate type:</div>
+        </div>
+
+        <div
+          id="top_info"
+          style="
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
+          "
+        >
+          <img
+            id="weather_icon"
+            src=""
+            alt="Weather Icon"
+            style="width: 80px; height: 80px"
+          />
+          <div>
+            <h1 id="temperature" style="margin: 0; font-size: 2.5rem"></h1>
+            <div id="weather_desc" style="font-size: 1.2rem; color: #555"></div>
+            <div id="feels_like" style="font-size: 1rem; color: #777"></div>
+          </div>
+        </div>
+
+        <div
+          id="details_grid"
+          style="
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+          "
+        >
+          <div
+            class="grid_item"
+            style="
+              padding: 10px;
+              border: 1px solid #ccc;
+              border-radius: 10px;
+              text-align: left;
+            "
+          >
+            <div>🌡️ Temperature</div>
+            <div id="temp_range"></div>
+          </div>
+          <div
+            class="grid_item"
+            style="
+              padding: 10px;
+              border: 1px solid #ccc;
+              border-radius: 10px;
+              text-align: left;
+            "
+          >
+            <div>💧 Humidity</div>
+            <div id="humidity_value"></div>
+          </div>
+          <div
+            class="grid_item"
+            style="
+              padding: 10px;
+              border: 1px solid #ccc;
+              border-radius: 10px;
+              text-align: left;
+            "
+          >
+            <div>🌬️ Wind</div>
+            <div id="wind_value"></div>
+          </div>
+
+          <div
+            class="grid_item"
+            style="
+              padding: 10px;
+              border: 1px solid #ccc;
+              border-radius: 10px;
+              text-align: left;
+            "
+          >
+            <div>☔ Precipitation</div>
+            <div id="precip_value">0 mm</div>
+          </div>
+          <div
+            class="grid_item"
+            style="
+              padding: 10px;
+              border: 1px solid #ccc;
+              border-radius: 10px;
+              text-align: left;
+            "
+          >
+            <div>☀️ UV Index</div>
+            <div id="uv_index">Moderate</div>
+          </div>
+          <div
+            class="grid_item"
+            style="
+              padding: 10px;
+              border: 1px solid #ccc;
+              border-radius: 10px;
+              text-align: left;
+            "
+          >
+            <div>😊 Comfort</div>
+            <div
+              style="
+                display: flex;
+                justify-content: left;
+                gap: 4px;
+                margin-top: 6px;
+              "
+            >
+              <div
+                class="comfort_bar"
+                style="
+                  width: 20px;
+                  height: 20px;
+                  background: #ddd;
+                  border-radius: 4px;
+                "
+              ></div>
+              <div
+                class="comfort_bar"
+                style="
+                  width: 20px;
+                  height: 20px;
+                  background: #ddd;
+                  border-radius: 4px;
+                "
+              ></div>
+              <div
+                class="comfort_bar"
+                style="
+                  width: 20px;
+                  height: 20px;
+                  background: #ddd;
+                  border-radius: 4px;
+                "
+              ></div>
+              <div
+                class="comfort_bar"
+                style="
+                  width: 20px;
+                  height: 20px;
+                  background: #ddd;
+                  border-radius: 4px;
+                "
+              ></div>
+              <div
+                class="comfort_bar"
+                style="
+                  width: 20px;
+                  height: 20px;
+                  background: #ddd;
+                  border-radius: 4px;
+                "
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="weather-controls" aria-label="Weather view selector">
+          <button class="btn btn--primary" data-target="ten-days">
+            Future Weather
+          </button>
+          <button class="btn btn--hourly" data-target="hourly">
+            Hourly Weather
+          </button>
+          <button class="btn btn--planning" data-target="planning">
+            For planning
+          </button>
+          <button class="btn btn--self" data-target="self">
+            Self forecasting
+          </button>
+        </div>
+
+        <!-- 10-day forecast section -->
+        <section id="futureWeather" aria-live="polite" hidden>
+          <h3 style="margin: 16px 0 12px">10-day forecast</h3>
+          <div id="futureWeatherList"></div>
+        </section>
+
+        <!-- Hourly forecast section -->
+        <section id="hourlyWeather" aria-live="polite" hidden>
+          <h3 style="margin: 16px 0 12px">Hourly forecast (next 24h)</h3>
+          <div id="hourlyList"></div>
+        </section>
+      </div>
+
+      <div id="mapWrapper">
+        <!-- Leaflet map -->
+        <div id="viewDiv"></div>
+      </div>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- georaster + georaster-layer-for-leaflet (browser builds) -->
+    <script src="https://unpkg.com/georaster/dist/georaster.browserify.min.js"></script>
+    <script src="https://unpkg.com/georaster-layer-for-leaflet/dist/georaster-layer-for-leaflet.browserify.min.js"></script>
+
+    <!-- Your app modules -->
+    <script type="module" src="./config.js"></script>
+    <script type="module" src="./script.js"></script>
+    <script type="module" src="./map.js"></script>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
